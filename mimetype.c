@@ -1,7 +1,6 @@
 #define _GNU_SOURCE
 
 #include <err.h>
-#include <errno.h>
 #include <getopt.h>
 #include <gio/gio.h>
 #include <stdio.h>
@@ -80,9 +79,9 @@ main(int argc, char *argv[])
 		{ "version", no_argument, NULL, 'v' },
 		{ NULL, 0, NULL, 0 }
 	};
-	int ch, flags = 0, i, ret = 0;
+	int ch, flags = 0, ret = 0;
 
-	while ((ch = getopt_long(argc, argv, "bLv", opts, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "bLv", opts, NULL)) >= 0) {
 		switch (ch) {
 		case 'b':
 			flags |= FLAG_BRIEF;
@@ -98,12 +97,11 @@ main(int argc, char *argv[])
 			break;
 		}
 	}
-	argc -= optind;
 	argv += optind;
-	if (!argc)
+	if (!*argv)
 		usage();
-	for (i = 0; i < argc; i++) {
-		if (resolve(argv[i], flags) < 0)
+	for (; *argv; argv++) {
+		if (resolve(*argv, flags) < 0)
 			ret = 1;
 	}
 	return ret;

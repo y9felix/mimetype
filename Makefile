@@ -2,12 +2,11 @@ PROG = mimetype
 PREFIX = /usr/local
 
 CC = cc
-INCS = $$(pkg-config --cflags gio-2.0)
-LIBS = $$(pkg-config --libs gio-2.0)
+PKGS = gio-2.0
 
-CPPFLAGS = $(INCS)
+CPPFLAGS = $$(pkg-config --cflags $(PKGS))
 CFLAGS = -std=c99 -pedantic -Wall -Wextra -Werror -O2
-LDFLAGS = -s $(LIBS)
+LDFLAGS = -s $$(pkg-config --libs $(PKGS))
 
 SRC = $(PROG).c
 OBJ = $(SRC:.c=.o)
@@ -27,6 +26,7 @@ clean:
 
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(PROG)
 	cp -f $(PROG) $(DESTDIR)$(PREFIX)/bin
 	chmod 755 $(DESTDIR)$(PREFIX)/bin/$(PROG)
 
