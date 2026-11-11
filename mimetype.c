@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 
 #include <err.h>
+#include <errno.h>
 #include <getopt.h>
 #include <gio/gio.h>
 #include <stdio.h>
@@ -19,13 +20,11 @@ enum {
 static void usage(void);
 static int resolve(const char *path, int flags);
 
-static const char *argv0;
-
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-bLv] [--brief] [--dereference] [file ...]\n",
-	    argv0);
+	fprintf(stderr, "usage: %s [-bLv] [file ...]\n",
+	    program_invocation_short_name);
 	exit(1);
 }
 
@@ -79,14 +78,10 @@ main(int argc, char *argv[])
 		{ "brief", no_argument, NULL, 'b' },
 		{ "dereference", no_argument, NULL, 'L' },
 		{ "version", no_argument, NULL, 'v' },
-		{ 0, 0, 0, 0 }
+		{ NULL, 0, NULL, 0 }
 	};
-	const char *p;
 	int ch, flags = 0, i, ret = 0;
 
-	argv0 = (*argv && **argv) ? *argv : "mimetype";
-	if ((p = strrchr(argv0, '/')))
-		argv0 = p + 1;
 	while ((ch = getopt_long(argc, argv, "bLv", opts, NULL)) != -1) {
 		switch (ch) {
 		case 'b':
@@ -105,10 +100,11 @@ main(int argc, char *argv[])
 	}
 	argc -= optind;
 	argv += optind;
-	if (argc < 1)
+	if (!argc)
 		usage();
-	for (i = 0; i < argc; i++)
+	for (i = 0; i < argc; i++) {
 		if (resolve(argv[i], flags) < 0)
 			ret = 1;
+	}
 	return ret;
 }
