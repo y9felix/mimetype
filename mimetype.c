@@ -1,39 +1,30 @@
 #define _GNU_SOURCE
 
+#include <err.h>
 #include <getopt.h>
 #include <gio/gio.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define VERSION "1.0"
+#define FALLBACK_TYPE "application/octet-stream"
+#define ZEROSIZE_TYPE "application/x-zerosize"
 
 enum {
 	FLAG_BRIEF  = 1 << 0,
 	FLAG_FOLLOW = 1 << 1
 };
 
-static void eprintf(const char *fmt, ...);
 static void usage(void);
 static int resolve(const char *path, int flags);
 
-static char *argv0;
-
-static void
-eprintf(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-}
+static const char *argv0;
 
 static void
 usage(void)
 {
-	eprintf("usage: %s [-bLv] [--brief] [--dereference] [file ...]\n",
+	fprintf(stderr, "usage: %s [-bLv] [--brief] [--dereference] [file ...]\n",
 	    argv0);
 	exit(1);
 }
@@ -51,32 +42,32 @@ resolve(const char *path, int flags)
 	f = g_file_new_for_path(path);
 	qflags = (flags & FLAG_FOLLOW) ? G_FILE_QUERY_INFO_NONE :
 	    G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS;
-	if (!(info = g_file_query_info(f, "standard::content-type", qflags,
-	    NULL, &err))) {
-		eprintf("%s: %s\n", argv0, err->message);
+	if (!(info = g_file_query_info(f, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+	    qflags, NULL, &err))) {
+		warnx("%s", err->message);
 		g_error_free(err);
-		goto unref_file;
+		goto unreffile;
 	}
 	type = g_file_info_get_content_type(info);
-	if (!type || !strcmp(type, "application/octet-stream") ||
-	    !strcmp(type, "application/x-zerosize")) {
+	if (!type || !strcmp(type, FALLBACK_TYPE) ||
+	    !strcmp(type, ZEROSIZE_TYPE)) {
 		guess = g_content_type_guess(path, NULL, 0, NULL);
-		if (guess && strcmp(guess, "application/octet-stream"))
+		if (guess && strcmp(guess, FALLBACK_TYPE))
 			type = guess;
 	}
 	if (!type) {
-		eprintf("%s: %s: cannot determine type\n", argv0, path);
-		goto free_guess;
+		warnx("%s: cannot determine type", path);
+		goto freeguess;
 	}
 	if (flags & FLAG_BRIEF)
 		printf("%s\n", type);
 	else
 		printf("%s: %s\n", path, type);
 	ret = 0;
-free_guess:
+freeguess:
 	g_free(guess);
 	g_object_unref(info);
-unref_file:
+unreffile:
 	g_object_unref(f);
 	return ret;
 }
@@ -90,7 +81,7 @@ main(int argc, char *argv[])
 		{ "version", no_argument, NULL, 'v' },
 		{ 0, 0, 0, 0 }
 	};
-	char *p;
+	const char *p;
 	int ch, flags = 0, i, ret = 0;
 
 	argv0 = (*argv && **argv) ? *argv : "mimetype";
@@ -109,6 +100,7 @@ main(int argc, char *argv[])
 			return 0;
 		default:
 			usage();
+			break;
 		}
 	}
 	argc -= optind;

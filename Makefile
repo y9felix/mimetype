@@ -1,13 +1,13 @@
 PROG = mimetype
-VERSION = 1.0
 PREFIX = /usr/local
 
 CC = cc
-PKGS = gio-2.0
+INCS = $$(pkg-config --cflags gio-2.0)
+LIBS = $$(pkg-config --libs gio-2.0)
 
-CPPFLAGS = -DVERSION=\"$(VERSION)\" $$(pkg-config --cflags $(PKGS))
+CPPFLAGS = $(INCS)
 CFLAGS = -std=c99 -pedantic -Wall -Wextra -Werror -O2
-LDFLAGS = -s $$(pkg-config --libs $(PKGS))
+LDFLAGS = -s $(LIBS)
 
 SRC = $(PROG).c
 OBJ = $(SRC:.c=.o)
