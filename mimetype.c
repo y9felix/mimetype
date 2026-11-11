@@ -40,8 +40,8 @@ resolve(const char *path, int flags)
 	f = g_file_new_for_path(path);
 	qflags = (flags & FLAG_FOLLOW) ? G_FILE_QUERY_INFO_NONE :
 	    G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS;
-	if (!(info = g_file_query_info(f, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
-	    qflags, NULL, &err))) {
+	if (!(info = g_file_query_info(f,
+	    G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, qflags, NULL, &err))) {
 		warnx("%s", err->message);
 		g_error_free(err);
 		goto unreffile;
