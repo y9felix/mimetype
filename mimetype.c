@@ -16,13 +16,10 @@ enum {
 	FLAG_FOLLOW = 1 << 1
 };
 
-static void usage(void);
-static int resolve(const char *path, int flags);
-
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-bLv] [file ...]\n", program_invocation_short_name);
+	fprintf(stderr, "usage: %s [-bLv] file ...\n", program_invocation_short_name);
 	exit(1);
 }
 
@@ -41,7 +38,7 @@ resolve(const char *path, int flags)
 	if (!(info = g_file_query_info(f, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, qflags, NULL, &err))) {
 		warnx("%s", err->message);
 		g_error_free(err);
-		goto unreffile;
+		goto unref_file;
 	}
 	type = g_file_info_get_content_type(info);
 	if (!type || !strcmp(type, FALLBACK_TYPE) || !strcmp(type, ZEROSIZE_TYPE)) {
@@ -51,17 +48,17 @@ resolve(const char *path, int flags)
 	}
 	if (!type) {
 		warnx("%s: cannot determine type", path);
-		goto freeguess;
+		goto free_guess;
 	}
 	if (flags & FLAG_BRIEF)
-		printf("%s\n", type);
+		puts(type);
 	else
 		printf("%s: %s\n", path, type);
 	ret = 0;
-freeguess:
+free_guess:
 	g_free(guess);
 	g_object_unref(info);
-unreffile:
+unref_file:
 	g_object_unref(f);
 	return ret;
 }
