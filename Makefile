@@ -1,4 +1,5 @@
 PROG = mimetype
+VERSION = 1.0.0
 PREFIX = /usr/local
 
 CC = cc
